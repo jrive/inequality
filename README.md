@@ -11,3 +11,19 @@ analysis toolkit based on Lorenz curves and Gini coefficient. The
 traditional case of analysis of a single resource, e.g., income or
 wealth, is included. The multivariate extension based on Fan et al. (?)
 is also supported. Most functions support weighted samples.
+
+## Examples of Relevant Multivariate Distributions
+
+- Multivariate Lognormal
+
+- Multivariate Pareto
+
+- Farlie-Gumbel-Morgenstern Family with uniform marginals
+
+- Sarmanov-Lee
+
+## S-Gini
+
+$$
+G_\delta = 1 - \frac{2^{d-1}}{\sum_{j=1}^d \delta_j^{-1}}\sum_{k=1}^d \int_{[0,1]^d} Q_k(u_1,\dots,u_d) \left(1 - u_k\right)^{\delta_k - 1} \prod_{j\neq k}^d \left(1 - u_j\right) \, du_1\dots du_d 
+$$

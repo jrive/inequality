@@ -1,4 +1,4 @@
-LorenzMap <- function(X,W = rep(1/nrow(X),nrow(X)),R=NULL,n = 1){
+LorenzMap <- function(X,W = rep(1/NROW(X),NROW(X)),R=NULL,n = 1){
   # R := matrix of desired ranks
   start <- Sys.time()
   d <- ncol(X)

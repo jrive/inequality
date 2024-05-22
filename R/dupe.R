@@ -1,5 +1,5 @@
 dupe <- function(X,W){
-  d <- ncol(X)
+  d <- NCOL(X)
   df <- data.frame(W,X)
   colnames <- c("W",sapply(2:(d+1),function(k){paste("X",(k-1),sep = "")}))
   df <- aggregate(W ~.,data = df,FUN=sum) # aggregate based on duplicates
