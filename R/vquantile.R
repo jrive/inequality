@@ -9,7 +9,11 @@ vquantile <- function(X,W,type,U=NULL,n=1){
   }
 
   if (type == "semidiscrete"){
-    
+    b <- wpp(scaling.min.max(X),W)
+    m <- matrix(rep(1,64^2),nrow = 64,ncol = 64)
+    a <- pgrid(m)
+    ot <- transport(a,b,p=2)
+    return(ot)
   }
   
 }

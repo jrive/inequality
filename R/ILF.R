@@ -1,4 +1,4 @@
-ILF <- function(X,W = rep(1/nrow(X),nrow(X)),ot,n){
+ilf <- function(X,W = rep(1/nrow(X),nrow(X)),ot,n){
   # This function calculates the 
   # Inverse Lorenz surface and related objects. This version is based
   # on solving the semi-discrete OT problem using otm2D, an algorithm from
@@ -26,37 +26,33 @@ ILF <- function(X,W = rep(1/nrow(X),nrow(X)),ot,n){
   # Step 0: Preliminaries
   #browser()
   start <- Sys.time()
-  df <- data.frame(X,W)
-  colnames(df) <- c("X1","X2","weight") 
-  df <- aggregate(weight ~ X1 + X2, df, sum) # aggregate based on duplicates
-  #head(df[duplicated(df[,1:2]),]) # to debug duplicates
-  W <- df$weight/sum(df$weight)
-  mu <- cbind(df[,1]%*%W, df[,2]%*%W)
-  X <- cbind(df[,1]/mu[1],df[,2]/mu[2])
+  Z <- dupe(X,W)
+  X <- Z$scale_data
+  W <- Z$weights
   
-  pwd <- ot$pwd
+  pwd <- vquantile(X,W,type = "semidiscrete")
+  constraint <- sapply(which(is.na(pwd$cells)== FALSE), function(j){polyarea(pwd$cells[[j]][,1], pwd$cells[[j]][,2])})
+  constraint <- max(sqrt(sum((constraint - W)^2)))
+  empty <- length(which(is.na(pwd$cells)))
   N <- length(W)
   # Parallelized to make calculations faster by taking advantage of stronger CPU
   # power in some computers.
   cl <- makeCluster(detectCores()-1, type = "SOCK")
   clusterExport(cl=cl,varlist = c('Lmap','X','W','pwd','st_area','st_intersection','st_sfc','st_polygon','rowProds','N'),envir=environment())
-  LR <- do.call(rbind,parLapply(cl,1:n, function(i){Lmap(cbind(runif(1),runif(1)),X,W,pwd$cells,N)}))
+  LR <- do.call(rbind,parLapply(cl,1:100, function(i){Lmap(cbind(runif(1),runif(1)),X,W,pwd$cells,N)}))
   stopCluster(cl)
   
   #browser()
   LR <- LR[complete.cases(LR),]
   # Step 2: Calculate the CDF estimator using L(R_i).
-  
-  eCDF <- function(obj, x, y){
-    sum((obj[,1] < x) & (obj[,2] < y))/nrow(obj)}
   grid <- as.matrix(CJ(x = seq(0,1,0.005), y = seq(0,1,0.005)))
-  Z <- apply(grid,1,function(r){eCDF(LR,r[1],r[2])})
+  Z <- apply(grid,1,function(r){ecdf(LR,r[1],r[2])})
   Z <- matrix(Z, nrow = length(seq(0,1,0.005)))
   # Calculate bivariate Gini coefficient by MC integration using L(R_i) sample
-  G <- 1 - 2*(sum(colMeans(LR)))
+  G <- 1 - 2*sum(colMeans(LR))
   # Done, return a list
   end <- Sys.time()
-  list_return <- list(LR,Z,G,pwd,ot$constraint,ot$empty,end - start)
-  names(list_return) <- c('lmap','estimate','Gini','quantile','constraint','empty','time')
+  list_return <- list(Z,LR,G,pwd,constraint,empty,end - start)
+  names(list_return) <- c('estimate','lmap','Gini','quantile','constraint','empty','time')
   return(list_return)
 }
